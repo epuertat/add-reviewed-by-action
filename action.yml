@@ -1,24 +1,20 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Add Reviewed-by Trailer to Pull Request'
+description:
+  'Adds a "Reviewed-by" trailer to the pull request description every time a
+  user approves the changes.'
+author: 'Ernesto Puerta'
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
   icon: 'heart'
   color: 'red'
-
-# Define your inputs here.
-inputs:
-  milliseconds:
-    description: 'Your input description here'
-    required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
-
 runs:
   using: node20
   main: dist/index.js
+inputs:
+  states:
+    description:
+      'Comma-separated list of pull request review states to consider for adding
+      the "Reviewed-by" trailer.: approved, change_requested, commented'
+    required: true
+    default: 'approved'

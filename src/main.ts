@@ -1,5 +1,5 @@
-import * as core from '@actions/core'
-import { wait } from './wait'
+import * as core from '@actions/core';
+import * as github from '@actions/github';
 
 /**
  * The main function for the action.
@@ -7,20 +7,32 @@ import { wait } from './wait'
  */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    const selectedStates = core
+      .getInput('states', { required: true })
+      .split(',')
+      .map(s => s.trim())
+    core.debug(`Selected states: ${selectedStates}`)
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    const context = github.context
+    const state = context.payload.review.state
+    core.debug(`PR state: ${state}`);
+    if (!selectedStates.includes(state)) {
+      core.notice(`Skipping: non-selected PR state: ${state}`)
+    } else {
+      core.info(`Selected PR state: ${state}`)
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+      const token = process.env.GITHUB_TOKEN as string
+      const rest = github.getOctokit(token).rest
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+      const username = context.payload.review.user.login
+      core.debug(`Username: ${username}`)
+
+      const { data: user } = await rest.users.getByUsername({
+        username
+      })
+      core.debug(`User: ${user}`)
+    }
   } catch (error) {
-    // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
   }
 }
